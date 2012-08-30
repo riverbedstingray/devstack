@@ -1593,7 +1593,7 @@ if is_service_enabled swift; then
     iniset ${SWIFT_CONFIG_PROXY_SERVER} filter:keystoneauth operator_roles "Member, admin"
 
     if is_service_enabled swift3;then
-        cat <<EOF>>${SWIFT_CONFIG_PROXY_SERVER}
+        cat <<EOF >>${SWIFT_CONFIG_PROXY_SERVER}
 # NOTE(chmou): s3token middleware is not updated yet to use only
 # username and password.
 [filter:s3token]
