@@ -1,6 +1,7 @@
-# lib/rvbd-lbaas
-# Functions to control the configuration and operation of the Riverbed LBaaS
-# <do not include this template file in ``stack.sh``!>
+# lib/balancer
+# Functions to control the configuration and operation of the Balancer service
+# To enable, add the following to localrc
+# ENABLED_SERVICES+=,balancer
 
 # Dependencies:
 # ``functions`` file
@@ -9,12 +10,12 @@
 
 # ``stack.sh`` calls the entry points in this order:
 #
-# install_rvbd-lbaas
-# configure_rvbd-lbaas
-# init_rvbd-lbaas
-# start_rvbd-lbaas
-# stop_rvbd-lbaas
-# cleanup_rvbd-lbaas
+# install_balancer
+# configure_balancer
+# init_balancer
+# start_balancer
+# stop_balancer
+# cleanup_balancer
 
 # Print the commands being run so that we can see the command that triggers
 # an error.  It is also useful for following along as the install occurs.
@@ -27,51 +28,68 @@ set -o xtrace
 # <define global variables here that belong to this project>
 
 # Set up default directories
-RVBD_LBAAS_DIR=$DEST/rvbd-lbaas
-RVBD_LBAAS_CONF_DIR=/etc/rvbd-lbaas
+BALANCER_DIR=$DEST/balancer
+BALANCER_CONF_DIR=/etc/balancer
 
 
 # Entry Points
 # ------------
 
-# cleanup_rvbd-lbaas() - Remove residual data files, anything left over from previous
+# cleanup_balancer() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
-function cleanup_rvbd-lbaas() {
-    # kill instances (nova)
-    # delete image files (glance)
+function cleanup_balancer() {
     # This function intentionally left blank
     :
 }
 
-# configure_rvbd-lbaas() - Set config files, create data dirs, etc
-function configure_rvbd-lbaas() {
-    # sudo python setup.py deploy
-    # iniset $LVBD_LBAAS_CONF ...
-    # This function intentionally left blank
-    :
+# configure_balancer() - Set config files, create data dirs, etc
+function configure_balancer() {
+   setup_develop $BALANCER_DIR
+
+   if [ -d $BALANCER_CONF_DIR ]; then
+      sudo mkdir -p $BALANCER_CONF_DIR
+   fi
+   sudo chown `whoami` $BALANCER_CONF_DIR
+
+   # copy configuration files to $BALANCER_CONF_DIR
+   cp $BALANCER_DIR/etc/* $BALANCER_CONF_DIR
+
+   # update ini files with keystone settings and db connection
+   for file in balancer-api-paste.ini balancer-api-keystone.ini; do
+      file=$BALANCER_CONF_DIR/$file
+      iniset $file filter:authtoken auth_host $KEYSTONE_AUTH_HOST
+      iniset $file filter:authtoken auth_port $KEYSTONE_AUTH_PORT
+      iniset $file filter:authtoken auth_protocol $KEYSTONE_AUTH_PROTOCOL
+      iniset $file filter:authtoken auth_uri $KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v2.0
+      iniset $file filter:authtoken admin_tenant_name $SERVICE_TENANT_NAME
+      iniset $file filter:authtoken admin_user balancer
+      iniset $file filter:authtoken admin_password $SERVICE_PASSWORD
+      iniset $file sql connection $BASE_SQL_CONN/balancer?charset=utf8
+   done
 }
 
-# init_rvbd-lbaas() - Initialize databases, etc.
-function init_rvbd-lbaas() {
-    # clean up from previous (possibly aborted) runs
-    # create required data files
-    :
+# init_balancer() - Initialize databases, etc.
+function init_balancer() {
+    # (re)create balancer database
+    mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e 'DROP DATABASE IF EXISTS balancer;'
+    mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e 'CREATE DATABASE balancer CHARACTER SET utf8;'
+
+    $BALANCER_DIR/bin/balancer-bin --dbsync
 }
 
-# install_rvbd-lbaas() - Collect source and prepare
-function install_rvbd-lbaas() {
-    # git clone xxx
-    :
+# install_balancer() - Collect source and prepare
+function install_balancer() {
+   git_clone $BALANCER_REPO $BALANCER_DIR $BALANCER_BRANCH
 }
 
-# start_rvbd-lbaas() - Start running processes, including screen
-function start_rvbd-lbaas() {
-    # screen_it rvbd-lbaas "cd $RVBD_LBAAS_DIR && $RVBD_LBAAS_DIR/bin/rvbd-lbaas-bin"
-    :
+# start_balancer() - Start running processes, including screen
+function start_balancer() {
+   #screen_it bal "cd $BALANCER_DIR && $BALANCER_DIR/bin/balancer-bin"
+   :
 }
 
-# stop_rvbd-lbaas() - Stop running processes (non-screen)
-function stop_rvbd-lbaas() {
+# stop_balancer() - Stop running processes (non-screen)
+function stop_balancer() {
     # FIXME(dtroyer): stop only our screen screen window?
     :
 }
