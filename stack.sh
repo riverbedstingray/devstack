@@ -242,6 +242,7 @@ sudo chown `whoami` $DATA_DIR
 source $TOP_DIR/lib/cinder
 source $TOP_DIR/lib/ceilometer
 source $TOP_DIR/lib/heat
+source $TOP_DIR/lib/balancer
 
 # Set the destination directories for openstack projects
 NOVA_DIR=$DEST/nova
@@ -798,6 +799,9 @@ fi
 if is_service_enabled ceilometer; then
     install_ceilometer
 fi
+if is_service_enabled balancer; then
+   install_balancer
+fi
 
 # Initialization
 # ==============
@@ -837,6 +841,9 @@ if is_service_enabled heat; then
 fi
 if is_service_enabled cinder; then
     configure_cinder
+fi
+if is_service_enabled balancer; then
+   configure_balancer
 fi
 
 if [[ $TRACK_DEPENDS = True ]] ; then
@@ -1960,6 +1967,12 @@ if is_service_enabled heat; then
     init_heat
 fi
 
+# Balancer
+# -----
+if is_service_enabled balancer; then
+   init_balancer
+fi
+
 # Launch Services
 # ===============
 
@@ -2159,6 +2172,11 @@ is_service_enabled swift3 || \
 # launch heat engine, api and metadata
 if is_service_enabled heat; then
     start_heat
+fi
+
+# launch balancer
+if is_service_enabled balancer; then
+   start_balancer
 fi
 
 # Install Images

@@ -11,6 +11,7 @@
 # service              swift     admin        # if enabled
 # service              cinder    admin        # if enabled
 # service              heat      admin        # if enabled
+# service              balancer  admin        # if enabled
 # demo                 admin     admin
 # demo                 demo      Member, anotherrole
 # invisible_to_admin   demo      Member
@@ -321,3 +322,25 @@ if [[ "$ENABLED_SERVICES" =~ "c-api" ]]; then
     fi
 fi
 
+# Balancer
+if [[ "$ENABLED_SERVICES" =~ "balancer" ]]; then
+    BALANCER_USER=$(get_id keystone user-create --name=balancer \
+                                              --pass="$SERVICE_PASSWORD" \
+                                              --tenant_id $SERVICE_TENANT \
+                                              --email=balancer@example.com)
+    keystone user-role-add --tenant_id $SERVICE_TENANT \
+                           --user_id $BALANCER_USER \
+                           --role_id $ADMIN_ROLE
+    if [[ "$KEYSTONE_CATALOG_BACKEND" = 'sql' ]]; then
+        BALANCER_SERVICE=$(get_id keystone service-create \
+            --name=balancer \
+            --type=lbaas \
+            --description="Balancer Service")
+        keystone endpoint-create \
+            --region RegionOne \
+            --service_id $BALANCER_SERVICE \
+            --publicurl "http://$SERVICE_HOST:$BALANCER_API_PORT" \
+            --adminurl "http://$SERVICE_HOST:$BALANCER_API_PORT" \
+            --internalurl "http://$SERVICE_HOST:$BALANCER_API_PORT"
+    fi
+fi
