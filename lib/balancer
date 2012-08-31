@@ -6,6 +6,9 @@
 # Dependencies:
 # ``functions`` file
 # ``SERVICE_{TENANT_NAME|PASSWORD}`` must be defined
+# ``DEST`` must be defined
+# ``MYSQL_{USER|PASSWORD}`` must be defined
+# 
 # <list other global vars that are assumed to be defined>
 
 # ``stack.sh`` calls the entry points in this order:
@@ -54,18 +57,17 @@ function configure_balancer() {
    # copy configuration files to $BALANCER_CONF_DIR
    cp $BALANCER_DIR/etc/* $BALANCER_CONF_DIR
 
-   # update ini files with keystone settings and db connection
-   for file in balancer-api-paste.ini balancer-api-keystone.ini; do
-      file=$BALANCER_CONF_DIR/$file
-      iniset $file filter:authtoken auth_host $KEYSTONE_AUTH_HOST
-      iniset $file filter:authtoken auth_port $KEYSTONE_AUTH_PORT
-      iniset $file filter:authtoken auth_protocol $KEYSTONE_AUTH_PROTOCOL
-      iniset $file filter:authtoken auth_uri $KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v2.0
-      iniset $file filter:authtoken admin_tenant_name $SERVICE_TENANT_NAME
-      iniset $file filter:authtoken admin_user balancer
-      iniset $file filter:authtoken admin_password $SERVICE_PASSWORD
-      iniset $file sql connection $BASE_SQL_CONN/balancer?charset=utf8
-   done
+   BALANCER_API_PASTE_INI=$BALANCER_CONF_DIR/balancer-api-paste.ini
+   iniset $BALANCER_API_PASTE_INI filter:authtoken auth_host $KEYSTONE_AUTH_HOST
+   iniset $BALANCER_API_PASTE_INI filter:authtoken auth_port $KEYSTONE_AUTH_PORT
+   iniset $BALANCER_API_PASTE_INI filter:authtoken auth_protocol $KEYSTONE_AUTH_PROTOCOL
+   iniset $BALANCER_API_PASTE_INI filter:authtoken auth_uri $KEYSTONE_SERVICE_PROTOCOL://$KEYSTONE_SERVICE_HOST:$KEYSTONE_SERVICE_PORT/v2.0
+   iniset $BALANCER_API_PASTE_INI filter:authtoken admin_tenant_name $SERVICE_TENANT_NAME
+   iniset $BALANCER_API_PASTE_INI filter:authtoken admin_user balancer
+   iniset $BALANCER_API_PASTE_INI filter:authtoken admin_password $SERVICE_PASSWORD
+
+   BALANCER_API_CONF=$BALANCER_CONF_DIR/balancer-api.conf
+   iniset $BALANCER_API_CONF sql connection $BASE_SQL_CONN/balancer?charset=utf8
 }
 
 # init_balancer() - Initialize databases, etc.
