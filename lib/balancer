@@ -74,7 +74,7 @@ function init_balancer() {
     mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e 'DROP DATABASE IF EXISTS balancer;'
     mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -e 'CREATE DATABASE balancer CHARACTER SET utf8;'
 
-    $BALANCER_DIR/bin/balancer-bin --dbsync
+    $BALANCER_DIR/bin/balancer-api --dbsync
 }
 
 # install_balancer() - Collect source and prepare
@@ -84,7 +84,7 @@ function install_balancer() {
 
 # start_balancer() - Start running processes, including screen
 function start_balancer() {
-   #screen_it bal "cd $BALANCER_DIR && $BALANCER_DIR/bin/balancer-bin"
+   #screen_it bal "cd $BALANCER_DIR && bin/balancer-api"
    :
 }
 
