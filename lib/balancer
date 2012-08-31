@@ -46,7 +46,7 @@ function cleanup_balancer() {
 function configure_balancer() {
    setup_develop $BALANCER_DIR
 
-   if [ -d $BALANCER_CONF_DIR ]; then
+   if [ ! -d $BALANCER_CONF_DIR ]; then
       sudo mkdir -p $BALANCER_CONF_DIR
    fi
    sudo chown `whoami` $BALANCER_CONF_DIR
