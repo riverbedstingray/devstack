@@ -86,8 +86,7 @@ function install_balancer() {
 
 # start_balancer() - Start running processes, including screen
 function start_balancer() {
-   #screen_it bal "cd $BALANCER_DIR && bin/balancer-api"
-   :
+   screen_it bal "cd $BALANCER_DIR && bin/balancer-api"
 }
 
 # stop_balancer() - Stop running processes (non-screen)
